@@ -1,0 +1,49 @@
+name: API Tests (Newman)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+  schedule:
+    # Runs every day at 08:00 UTC to catch API regressions
+    - cron: '0 8 * * *'
+
+jobs:
+  newman:
+    name: Run Postman collection with Newman
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run API tests
+        run: npm run test:ci
+
+      - name: Upload HTML + JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-reports
+          path: reports/
+          retention-days: 30
+
+      - name: Publish test results summary
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Newman API Tests
+          path: reports/junit.xml
+          reporter: java-junit
+          fail-on-error: false

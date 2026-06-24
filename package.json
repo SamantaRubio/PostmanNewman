@@ -1,0 +1,24 @@
+{
+  "name": "fakestoreapi-postman-newman",
+  "version": "1.0.0",
+  "description": "API testing suite for FakeStoreAPI using Postman + Newman, runnable from CLI and GitHub Actions.",
+  "scripts": {
+    "test": "newman run collections/FakeStoreAPI.postman_collection.json -e environments/fakestore.postman_environment.json",
+    "test:data": "newman run collections/FakeStoreAPI.postman_collection.json -e environments/fakestore.postman_environment.json -d data/products.json",
+    "test:html": "newman run collections/FakeStoreAPI.postman_collection.json -e environments/fakestore.postman_environment.json -r cli,htmlextra --reporter-htmlextra-export reports/report.html",
+    "test:ci": "newman run collections/FakeStoreAPI.postman_collection.json -e environments/fakestore.postman_environment.json -r cli,htmlextra,junit --reporter-htmlextra-export reports/report.html --reporter-junit-export reports/junit.xml"
+  },
+  "keywords": [
+    "api-testing",
+    "postman",
+    "newman",
+    "qa",
+    "automation"
+  ],
+  "author": "Samanta Rubio",
+  "license": "MIT",
+  "devDependencies": {
+    "newman": "^6.2.1",
+    "newman-reporter-htmlextra": "^1.23.1"
+  }
+}
