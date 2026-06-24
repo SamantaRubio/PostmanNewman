@@ -1,31 +1,31 @@
-# FakeStoreAPI — API Testing (Postman + Newman)
+# Restful Booker — API Testing (Postman + Newman)
 
-End-to-end API test suite for [FakeStoreAPI](https://fakestoreapi.com/docs), built with **Postman** and executed in CI with **Newman** + **GitHub Actions**.
+End-to-end API test suite for [Restful Booker](https://restful-booker.herokuapp.com/apidoc/index.html), built with **Postman** and executed in CI with **Newman** + **GitHub Actions**.
 
 [![API Tests](https://github.com/SamantaRubio/PostmanNewman/actions/workflows/api-tests.yml/badge.svg)](https://github.com/SamantaRubio/PostmanNewman/actions/workflows/api-tests.yml)
 
 ## What this project demonstrates
 
-- **Full CRUD coverage** across the `Products`, `Carts`, `Users` and `Auth` resources.
+- **Real CRUD lifecycle** — a booking is created, read back, updated (PUT), partially updated (PATCH), deleted, and then confirmed gone (404). Unlike echo/mock APIs, Restful Booker **persists data**, so the tests verify actual state changes.
+- **Token-based authentication** — a token is obtained from `POST /auth` and chained into the protected `PUT` / `PATCH` / `DELETE` requests via a `Cookie` header.
 - **JSON Schema validation** with [AJV](https://ajv.js.org/) — assertions go beyond status codes and verify the response *contract*.
-- **Variable chaining** — values captured in one request (auth token, product/cart/user IDs, categories) feed later requests.
-- **Negative testing** — unknown IDs and invalid routes.
-- **Data-driven testing** — `POST /products` runs once per row in `data/products.json`.
+- **Variable chaining** — the auth token and the new booking id flow from one request to the next.
+- **Negative testing** — bad credentials, unknown id (404), and an unauthorized update (403).
+- **Data-driven testing** — the create/read/update/delete flow runs once per row in `data/bookings.json`.
 - **Collection-level assertions** — every request is checked for response time and absence of 5xx errors.
-- **CI/CD** — runs on every push/PR, daily on a schedule, and publishes HTML + JUnit reports as artifacts.
 
 ## Project structure
 
 ```
 .
-├── .github/workflows/api-tests.yml          # GitHub Actions pipeline
+├── .github/workflows/api-tests.yml             # GitHub Actions pipeline
 ├── collections/
-│   └── FakeStoreAPI.postman_collection.json # The test collection
+│   └── RestfulBooker.postman_collection.json   # The test collection
 ├── environments/
-│   └── fakestore.postman_environment.json   # Environment variables (baseUrl, token)
+│   └── restfulbooker.postman_environment.json  # Environment variables (baseUrl, token)
 ├── data/
-│   └── products.json                        # Data-driven test inputs
-├── reports/                                 # Generated reports (gitignored)
+│   └── bookings.json                           # Data-driven test inputs
+├── reports/                                    # Generated reports (gitignored)
 ├── package.json
 └── README.md
 ```
@@ -46,9 +46,9 @@ npm install
 | Command | Description |
 |---|---|
 | `npm test` | Run the full collection (CLI output). |
-| `npm run test:data` | Run with the data file (data-driven `POST /products`). |
+| `npm run test:data` | Run the CRUD flow once per row in `data/bookings.json`. |
 | `npm run test:html` | Run and export an HTML report to `reports/report.html`. |
-| `npm run test:ci` | Run and export HTML + JUnit reports (used by CI). |
+| `npm run test:ci` | Data-driven run with HTML + JUnit reports (used by CI). |
 
 Example:
 
@@ -61,11 +61,10 @@ open reports/report.html   # macOS
 
 | Folder | Requests |
 |---|---|
-| **Auth** | Login (valid) · Login (invalid → 401) |
-| **Products** | Get all · Get by id · Limit · Sort · Categories · By category · Create · Update (PUT) · Update (PATCH) · Delete |
-| **Carts** | Get all · Get by id · Get by user · Create · Delete |
-| **Users** | Get all · Get by id · Create · Update · Delete |
-| **Negative cases** | Unknown product id · Unknown route (404) |
+| **Health Check** | Ping (service up → 201) |
+| **Auth** | Get token (valid) · Bad credentials (negative) |
+| **Booking - CRUD flow** | Get all · Create · Get by id (verify persisted) · Filter by name · Update (PUT) · Update (PATCH) · Delete · Get deleted (verify gone → 404) |
+| **Negative cases** | Unknown booking id (404) · Update without token (403) |
 
 ## Continuous Integration (CI/CD)
 
@@ -83,7 +82,7 @@ Tests run automatically on **GitHub Actions** — no local setup required to see
 **What the pipeline does:**
 
 1. Checks out the repository.
-2. Sets up Node.js 20 with npm cache.
+2. Sets up Node.js with npm cache.
 3. Installs dependencies with `npm ci`.
 4. Runs the collection via `npm run test:ci` (CLI + HTML + JUnit reporters).
 5. Uploads `reports/` (HTML + JUnit) as a downloadable build artifact, kept for 30 days.
@@ -91,9 +90,12 @@ Tests run automatically on **GitHub Actions** — no local setup required to see
 
 The build **fails if any assertion fails**, so the status badge at the top of this README reflects the real state of the API contract. To download a report, open the latest run under the repo's **Actions** tab and grab the `newman-reports` artifact.
 
-## Notes on FakeStoreAPI
+## Notes on Restful Booker
 
-FakeStoreAPI is a **mock backend**: `POST`/`PUT`/`PATCH`/`DELETE` requests return a *simulated* response (an echo of the payload plus an `id`) but **do not persist** any data. The tests assert against the simulated response shape rather than expecting the data to be retrievable afterwards — this mirrors how you would test a service whose write side-effects are out of scope.
+- **Auth:** protected methods (`PUT` / `PATCH` / `DELETE`) require a token from `POST /auth` (`admin` / `password123`), sent as `Cookie: token=...`. The suite handles this automatically.
+- **Status codes:** the API returns `201` for both `GET /ping` and a successful `DELETE` — the tests assert these documented behaviours explicitly.
+- **Hosting:** Restful Booker runs on a Heroku dyno that may cold-start after inactivity, so the global response-time assertion is intentionally generous and the request timeout is set to 60s.
+- **Shared data:** it is a public sandbox; created bookings are visible to everyone and may be periodically reset. The tests are self-contained (they create the data they assert on), so this does not affect results.
 
 ## Author
 

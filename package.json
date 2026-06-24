@@ -1,19 +1,20 @@
 {
-  "name": "fakestoreapi-postman-newman",
+  "name": "restful-booker-postman-newman",
   "version": "1.0.0",
-  "description": "API testing suite for FakeStoreAPI using Postman + Newman, runnable from CLI and GitHub Actions.",
+  "description": "API testing suite for Restful Booker using Postman + Newman, runnable from CLI and GitHub Actions.",
   "scripts": {
-    "test": "newman run collections/FakeStoreAPI.postman_collection.json -e environments/fakestore.postman_environment.json",
-    "test:data": "newman run collections/FakeStoreAPI.postman_collection.json -e environments/fakestore.postman_environment.json -d data/products.json",
-    "test:html": "newman run collections/FakeStoreAPI.postman_collection.json -e environments/fakestore.postman_environment.json -r cli,htmlextra --reporter-htmlextra-export reports/report.html",
-    "test:ci": "newman run collections/FakeStoreAPI.postman_collection.json -e environments/fakestore.postman_environment.json -r cli,htmlextra,junit --reporter-htmlextra-export reports/report.html --reporter-junit-export reports/junit.xml"
+    "test": "newman run collections/RestfulBooker.postman_collection.json -e environments/restfulbooker.postman_environment.json --timeout-request 60000",
+    "test:data": "newman run collections/RestfulBooker.postman_collection.json -e environments/restfulbooker.postman_environment.json -d data/bookings.json --timeout-request 60000",
+    "test:html": "newman run collections/RestfulBooker.postman_collection.json -e environments/restfulbooker.postman_environment.json -r cli,htmlextra --reporter-htmlextra-export reports/report.html --timeout-request 60000",
+    "test:ci": "newman run collections/RestfulBooker.postman_collection.json -e environments/restfulbooker.postman_environment.json -d data/bookings.json -r cli,htmlextra,junit --reporter-htmlextra-export reports/report.html --reporter-junit-export reports/junit.xml --timeout-request 60000"
   },
   "keywords": [
     "api-testing",
     "postman",
     "newman",
     "qa",
-    "automation"
+    "automation",
+    "restful-booker"
   ],
   "author": "Samanta Rubio",
   "license": "MIT",
